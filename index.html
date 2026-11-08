@@ -152,6 +152,17 @@ aside h3{margin:0;padding:14px 16px 10px;font-size:13px;text-transform:uppercase
 .summary{border-top:1px solid var(--line);padding:12px 16px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .summary b{color:var(--text)}
 
+/* empty state */
+.empty-state{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:0 18%;z-index:5}
+.empty-state h1{margin:0;font-size:clamp(18px,2.6cqw,30px);font-weight:800}
+.empty-state p{margin:0;color:rgba(255,255,255,.75);font-size:clamp(12px,1.45cqw,15px);line-height:1.5;max-width:520px}
+.es-logo{width:clamp(40px,5cqw,56px);height:clamp(40px,5cqw,56px);border-radius:14px;background:rgba(0,0,0,.35);display:grid;place-items:center;font-size:clamp(20px,2.6cqw,30px)}
+.es-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.log-empty{display:none;padding:4px 16px 16px;color:var(--muted);font-size:13px}
+body.is-empty .empty-state{display:flex}
+body.is-empty .center,body.is-empty #layer,body.is-empty .caption,body.is-empty .eqpanel,body.is-empty .controls,body.is-empty #summary,body.is-empty #btnShare{display:none}
+body.is-empty .log-empty{display:block}
+.narrow .empty-state{padding:0 10%}
 /* equity */
 .eqpill{position:relative;margin-top:14px;width:clamp(70px,10cqw,120px);height:clamp(15px,1.8cqw,20px);border-radius:999px;background:rgba(0,0,0,.6);overflow:hidden;border:1px solid rgba(255,255,255,.12)}
 .eqpill i{position:absolute;inset:0 auto 0 0;background:var(--c);opacity:.85;transition:width .5s ease}
@@ -216,6 +227,12 @@ aside h3{margin:0;padding:14px 16px 10px;font-size:13px;text-transform:uppercase
   <section class="stage">
     <div class="table-wrap color" id="tableWrap">
       <div class="felt"></div>
+      <div class="empty-state" id="emptyState">
+        <div class="es-logo">♠</div>
+        <h1>Replay a poker hand</h1>
+        <p>Paste a ClubGG hand history to replay it step by step – with equities on every street, all-in runouts and a link you can share.</p>
+        <div class="es-btns"><button class="btn primary" id="esPaste">Paste hand history</button></div>
+      </div>
       <div class="center">
         <div class="potline"><div class="pot-total" id="potTotal"></div><div class="pot-sub" id="potSub"></div></div>
         <div class="board" id="board"></div>
@@ -254,6 +271,7 @@ aside h3{margin:0;padding:14px 16px 10px;font-size:13px;text-transform:uppercase
   <aside>
     <h3>Actions</h3>
     <div id="log"></div>
+    <div class="log-empty">No hand loaded yet.</div>
     <div class="summary" id="summary"></div>
   </aside>
 </main>
@@ -262,7 +280,7 @@ aside h3{margin:0;padding:14px 16px 10px;font-size:13px;text-transform:uppercase
   <div class="box">
     <h2>Paste hand history</h2>
     <p>ClubGG hand histories (PokerStars-style format works too). You can paste several hands at once – they will appear in a dropdown.</p>
-    <textarea id="hhInput" spellcheck="false"></textarea>
+    <textarea id="hhInput" spellcheck="false" placeholder="ClubGG Hand #...: 5 Card Omaha Pot Limit ..."></textarea>
     <div class="err" id="err"></div>
     <div class="actions"><button class="btn" id="bCancel">Cancel</button><button class="btn primary" id="bLoad">Replay hand</button></div>
   </div>
@@ -362,54 +380,6 @@ onmessage = ev => {
 };
 </script>
 <script>
-const SAMPLE = `ClubGG Hand #1926834970:  5 Card Omaha Pot Limit (¥2.5/¥5 - Ante ¥2 CNY) - 2026/11/08 8:31:47 UTC
-Table 'ClubId:952228,Table:CGG_13199767' 6-max Seat #1 is the button
-Seat 1: 78964590 (¥300 in chips)
-Seat 2: 84621416 (¥343.43 in chips)
-Seat 3: 48512472 (¥358.37 in chips)
-Seat 4: 42236722 (¥470.15 in chips)
-Seat 5: 78313618 (¥1255.14 in chips)
-Seat 6: 97328792 (¥411.62 in chips)
-84621416: posts small blind ¥2.5
-48512472: posts big blind ¥5
-78964590: posts the ante ¥2
-84621416: posts the ante ¥2
-48512472: posts the ante ¥2
-42236722: posts the ante ¥2
-78313618: posts the ante ¥2
-97328792: posts the ante ¥2
-*** HOLE CARDS ***
-42236722: calls ¥5
-78313618: raises ¥29.5 to ¥34.5
-97328792: folds
-78964590: calls ¥34.5
-84621416: calls ¥32
-48512472: raises ¥155 to ¥189.5
-42236722: raises ¥278.65 to ¥468.15 and is all-in
-78313618: raises ¥784.99 to ¥1253.14 and is all-in
-78964590: folds
-84621416: folds
-48512472: calls ¥166.87 and is all-in
-Uncalled bet (¥784.99) returned to 78313618
-*** FLOP *** [6d 7s 3h] {Rake: ¥13.81}
-*** TURN *** [6d 7s 3h] [Jh] {Rake: ¥13.81}
-*** RIVER *** [6d 7s 3h Jh] [5c] {Rake: ¥13.81}
-*** SHOW DOWN ***
-42236722: shows [Kh Qc Tc 9d 6h] (a pair of Sixes)
-78313618: shows [Ac Jc 8d 3d 2c] (two pair, Jacks and Threes)
-78313618 collected ¥221.12 from side pot
-48512472: shows [Ah Ad Qd 8c 7h] (a pair of Aces)
-78313618 collected ¥1136.3 from main pot
-*** SUMMARY ***
-Total pot ¥1373.67 Main pot ¥1136.3. Side pot ¥221.12. | Rake ¥16.25
-Board [6d 7s 3h Jh 5c]
-Seat 1: 78964590 (button) folded before Flop
-Seat 2: 84621416 (small blind) folded before Flop
-Seat 3: 48512472 (big blind) showed [Ah Ad Qd 8c 7h] and lost with a pair of Aces
-Seat 4: 42236722 showed [Kh Qc Tc 9d 6h] and lost with a pair of Sixes
-Seat 5: 78313618 showed [Ac Jc 8d 3d 2c] and won (¥1357.42) with two pair, Jacks and Threes
-Seat 6: 97328792 folded before Flop (didn't bet)
-Hand ended at 2026/11/08 8:32:40`;
 
 const SUIT = {s:'♠',h:'♥',d:'♦',c:'♣'};
 const $ = s => document.querySelector(s);
@@ -684,6 +654,7 @@ function geom(){
 }
 
 function render(){
+  if(!H) return;
   const s = STEPS[cur], prev = STEPS[cur - 1];
   const fwd = lastRendered === cur - 1 && prev;
   const g = geom(), n = H.maxSeats;
@@ -776,6 +747,7 @@ function render(){
 }
 
 function buildLog(){
+  if(!H) return;
   $('#log').innerHTML = STEPS.map((s,i) => `<div class="li ${s.hdr ? 'hdr' : ''}" data-i="${i}"><span class="n">${i+1}</span><span>${s.label}</span></div>`).join('');
   const sm = H.summary.filter(l => /^Seat \d+:/.test(l));
   $('#summary').innerHTML = H.totalPot != null
@@ -785,6 +757,7 @@ function buildLog(){
 }
 
 function loadHand(h){
+  document.body.classList.remove('is-empty');
   stop();
   H = h; opts.hero = null;
   STEPS = buildSteps(H); cur = 0; lastRendered = -1;
@@ -899,10 +872,10 @@ function renderEqPanel(s){
 }
 
 /* ================= PLAYBACK ================= */
-function go(i){ cur = Math.max(0, Math.min(STEPS.length - 1, i)); render(); }
+function go(i){ if(!H) return; cur = Math.max(0, Math.min(STEPS.length - 1, i)); render(); }
 function delayFor(s){ const base = s.runout && (s.kind === 'street' || s.kind === 'runout') ? 2600 : s.hdr ? 1700 : s.kind === 'collect' || s.kind === 'shows' ? 1500 : 1050; return base / opts.speed; }
 function tick(){ if(cur >= STEPS.length - 1){ stop(); return; } go(cur + 1); timer = setTimeout(tick, delayFor(STEPS[cur])); }
-function play(){ if(cur >= STEPS.length - 1) go(0); setPlayIcon(true); timer = setTimeout(tick, 350 / opts.speed); }
+function play(){ if(!H) return; if(cur >= STEPS.length - 1) go(0); setPlayIcon(true); timer = setTimeout(tick, 350 / opts.speed); }
 function stop(){ clearTimeout(timer); timer = null; setPlayIcon(false); }
 function setPlayIcon(on){ $('#playIcon').innerHTML = on ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M7 5v14l12-7z"/>'; }
 
@@ -948,7 +921,6 @@ function ingest(text){
   sel.style.display = hands.length > 1 ? '' : 'none';
   sel.innerHTML = hands.map((h,i) => `<option value="${i}">#${esc(h.id)} · ${esc(h.date.replace(/\s*UTC.*/,''))}</option>`).join('');
   loadHand(hands[0]);
-  try{ localStorage.setItem('replayer-hh', text); }catch(e){}
   return errs;
 }
 $('#handSelect').onchange = e => loadHand(HANDS[+e.target.value]);
@@ -965,39 +937,18 @@ $('#bLoad').onclick = () => {
 /* ================= SHARE ================= */
 const BASE_URL = location.origin + location.pathname;
 const B32 = 'abcdefghijklmnopqrstuvwxyz234567';
-let dbPromise = null;
-function getDb(){
-  if(!dbPromise) dbPromise = (window.claude && claude.use) ? claude.use('db').catch(() => null) : Promise.resolve(null);
-  return dbPromise;
-}
 function b32enc(bytes){ let out = '', buf = 0, bits = 0; for(const b of bytes){ buf = (buf << 8) | b; bits += 8; while(bits >= 5){ out += B32[(buf >>> (bits - 5)) & 31]; bits -= 5; } buf &= 0xff; } if(bits > 0) out += B32[(buf << (5 - bits)) & 31]; return out; }
 function b32dec(str){ const out = []; let buf = 0, bits = 0; for(const ch of str){ const v = B32.indexOf(ch); if(v < 0) throw new Error('bad'); buf = (buf << 5) | v; bits += 5; if(bits >= 8){ out.push((buf >>> (bits - 8)) & 255); bits -= 8; } buf &= 0xff; } return new Uint8Array(out); }
 async function pack(text){ const s = new Blob([text]).stream().pipeThrough(new CompressionStream('deflate-raw')); return b32enc(new Uint8Array(await new Response(s).arrayBuffer())); }
 async function unpack(code){ const s = new Blob([b32dec(code)]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return await new Response(s).text(); }
-async function hashId(text){
-  try{ const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))); return b32enc(d).slice(0, 14); }
-  catch(e){ return Array.from({length:14}, () => B32[Math.random() * 32 | 0]).join(''); }
-}
 const shareCache = {};
 const b64enc = bytes => { let s = ''; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const b64dec = str => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); };
 async function packB64(text){ const st = new Blob([text]).stream().pipeThrough(new CompressionStream('deflate-raw')); return b64enc(new Uint8Array(await new Response(st).arrayBuffer())); }
 async function unpackB64(code){ const st = new Blob([b64dec(code)]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return await new Response(st).text(); }
 async function makeShareName(h){
-  if(shareCache[h.raw]) return shareCache[h.raw];
-  if(!(window.claude && claude.use)){ const n = 'b-' + await packB64(h.raw); shareCache[h.raw] = n; return n; }
-  const db = await Promise.race([getDb(), new Promise(r => setTimeout(() => r(null), 6000))]);
-  let name = null;
-  if(db){
-    try{
-      const id = await hashId(h.raw);
-      await db.doc('hands/' + id).set({ text:h.raw, handId:h.id, game:h.game, stakes:h.stakesStr, date:h.date, sharedAt:new Date().toISOString() });
-      name = 'h-' + id;
-    }catch(e){ name = null; }
-  }
-  if(!name) name = 'z-' + await pack(h.raw);
-  shareCache[h.raw] = name;
-  return name;
+  if(!shareCache[h.raw]) shareCache[h.raw] = 'b-' + await packB64(h.raw);
+  return shareCache[h.raw];
 }
 let shareName = '';
 function shareLink(){
@@ -1011,6 +962,7 @@ function refreshShare(){
   try{ history.replaceState(null, '', '#' + shareLink().split('#')[1]); }catch(e){}
 }
 $('#btnShare').onclick = async () => {
+  if(!H) return openModal();
   stop();
   $('#shareModal').classList.add('open');
   $('#shareOk').textContent = '';
@@ -1021,7 +973,7 @@ $('#btnShare').onclick = async () => {
   $('#shareUrl').value = 'Creating link…';
   shareName = await makeShareName(H);
   refreshShare();
-  $('#shareOk').textContent = shareName.startsWith('h-') ? 'Short link created – the hand is saved to this page.' : 'Link created – the whole hand is packed into the link, so anyone can open it.';
+  $('#shareOk').textContent = 'Link created – the whole hand is packed into the link, so anyone can open it.';
 };
 $('#shareStep').onchange = refreshShare;
 $('#bCopy').onclick = async () => {
@@ -1049,11 +1001,7 @@ async function openFromHash(){
     let text = null;
     if(kind === 'z') text = await unpack(code);
     else {
-      const db = await getDb();
-      if(!db) throw new Error('Could not access the shared hand. Make sure you are signed in and have access to this page.');
-      const snap = await Promise.race([db.doc('hands/' + code).get(), new Promise((_, rej) => setTimeout(() => rej(new Error('Loading the shared hand timed out.')), 12000))]);
-      if(!snap.exists) throw new Error('Shared hand not found.');
-      text = snap.data().text;
+      throw new Error('This short link only works in the original version of the replayer. Paste the hand history instead.');
     }
     ingest(text);
     shareCache[H.raw] = kind + '-' + code;
@@ -1069,9 +1017,9 @@ async function openFromHash(){
 }
 window.addEventListener('hashchange', openFromHash);
 
-let initial = SAMPLE;
-try{ const saved = localStorage.getItem('replayer-hh'); if(saved && /Hand\s+#/.test(saved)) initial = saved; }catch(e){}
-try{ ingest(initial); }catch(e){ ingest(SAMPLE); }
+document.body.classList.add('is-empty');
+try{ localStorage.removeItem('replayer-hh'); }catch(e){}
+$('#esPaste').onclick = openModal;
 openFromHash();
 </script>
 </body>
