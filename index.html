@@ -40,7 +40,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 23.571rem;gap:1.286rem;pad
   box-shadow:0 0 0 clamp(6px,1.3cqw,22px) #1b130e,0 0 0 clamp(8px,1.6cqw,26px) #3a2a1d,0 25px 60px rgba(0,0,0,.6),inset 0 0 60px rgba(0,0,0,.45)}
 .narrow .felt{inset:12% 13%}
 .felt::after{content:"";position:absolute;inset:7%;border-radius:71.357rem;border:1.5px solid rgba(255,255,255,.07)}
-.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1cqw,16px);z-index:2}
+.center{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1cqw,16px);z-index:2}
 .potline{display:flex;flex-direction:column;align-items:center;gap:0.214rem;min-height:2.6em}
 .pot-total{background:rgba(0,0,0,.38);border-radius:71.357rem;padding:0.286rem 1rem;font-weight:700;font-size:clamp(11px,1.55cqw,25px);font-family:"JetBrains Mono",monospace;letter-spacing:-.2px}
 .pot-total span{color:#a7d9bc;font-family:Inter;font-weight:600;margin-right:0.429rem;font-size:.85em}
@@ -209,14 +209,24 @@ body.is-empty .log-empty{display:block}
 .pots td .mini .card{--cw:1.143rem}
 .eqnote{font-size:0.857rem;color:var(--muted);margin-top:0.429rem}
 /* odds */
+.pot-odds-out{display:none}
+@media (max-width:699px){
+  .table-wrap .pot-odds{display:none!important}
+  .pot-odds-out.show{display:flex;flex-direction:column;gap:3px;background:rgba(8,20,40,.55);border:1px solid rgba(143,194,255,.35);border-radius:12px;padding:.55rem .8rem;color:#dfe9f7;font-size:.9rem;line-height:1.4}
+  .pot-odds-out b{font-family:"JetBrains Mono",monospace;font-weight:800;color:#fff}
+  body.is-empty .pot-odds-out{display:none}
+}
 .odds{font-size:.78em;color:#8fc2ff;font-family:"JetBrains Mono",monospace;font-weight:700;margin-left:.3em;white-space:nowrap}
-.pot-odds{display:none;flex-direction:column;align-items:center;gap:2px;margin-top:4px;background:rgba(8,20,40,.55);border:1px solid rgba(143,194,255,.35);border-radius:12px;padding:clamp(4px,.6cqw,9px) clamp(8px,1.2cqw,18px);font-size:clamp(10px,1.2cqw,20px);color:#dfe9f7;text-align:center;line-height:1.35}
+.pot-odds{display:none;position:absolute;top:calc(100% + clamp(3px,.5cqw,8px));left:50%;transform:translateX(-50%);width:max-content;max-width:62cqw;flex-direction:column;align-items:center;gap:2px;background:rgba(8,20,40,.55);border:1px solid rgba(143,194,255,.35);border-radius:12px;padding:clamp(4px,.6cqw,9px) clamp(8px,1.2cqw,18px);font-size:clamp(10px,1.2cqw,20px);color:#dfe9f7;text-align:center;line-height:1.35}
 .pot-odds.show{display:flex}
 .pot-odds b{font-family:"JetBrains Mono",monospace;font-weight:800;color:#fff}
 .po-who{font-size:.92em;color:#b9cbe3}
-.po-main{display:flex;gap:.9em;font-size:1.08em}
-.po-main b{color:#8fc2ff}
 .po-eq{font-size:.88em}
+.po-bluff{font-size:.88em;color:#f3d48a}.po-bluff b{color:#ffc44d}
+.po-bluff+.po-who{margin-top:2px;padding-top:3px;border-top:1px solid rgba(143,194,255,.25)}
+.po-who b.need{color:#8fc2ff}
+.po-who .good{color:#5fe39a}.po-who .bad{color:#ff8a8a}
+.bluff{font-size:.78em;color:#f3c76a;font-family:"JetBrains Mono",monospace;font-weight:700;margin-left:.3em;white-space:nowrap}
 .po-eq.good b{color:#5fe39a}.po-eq.bad b{color:#ff8a8a}
 .toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,1rem);background:#1f2530;border:1px solid rgba(255,255,255,.14);color:var(--text);padding:.65rem 1.1rem;border-radius:0.714rem;font-size:.92rem;opacity:0;pointer-events:none;transition:.25s;z-index:70;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -263,13 +273,15 @@ body.is-empty .log-empty{display:block}
         <div class="es-btns"><button class="btn primary" id="esPaste">Paste hand history</button></div>
       </div>
       <div class="center">
-        <div class="potline"><div class="pot-total" id="potTotal"></div><div class="pot-sub" id="potSub"></div><div class="pot-odds" id="potOdds"></div></div>
+        <div class="potline"><div class="pot-total" id="potTotal"></div><div class="pot-sub" id="potSub"></div></div>
         <div class="board" id="board"></div>
         <div class="street-tag" id="streetTag"></div>
+        <div class="pot-odds" id="potOdds"></div>
       </div>
       <div id="layer"></div>
     </div>
 
+    <div class="pot-odds-out" id="potOddsOut"></div>
     <div class="caption"><span class="stepno" id="stepNo"></span><span class="txt" id="caption"></span></div>
     <div class="controls">
       <div class="row">
@@ -414,6 +426,13 @@ onmessage = ev => {
 };
 </script>
 <script>
+
+// ============================================================
+// SHORT LINKS: paste your Cloudflare Worker address between the quotes,
+// e.g. 'https://hand-replayer.yourname.workers.dev'
+// Leave empty to use long links (the whole hand inside the link).
+const SHORT_API = '';
+// ============================================================
 
 const SUIT = {s:'♠',h:'♥',d:'♦',c:'♣'};
 const $ = s => document.querySelector(s);
@@ -573,9 +592,12 @@ function buildSteps(h){
     const pot = st.pot + Object.values(st.players).reduce((a, x) => a + (x === q ? x.committed : Math.min(x.committed, cap)), 0);
     return { name:q.name, toCall, pot, ratio:pot / toCall, need:toCall / (pot + toCall), street:st.street };
   };
-  const oddsTxt = f => f ? ` <span class="odds">${f.ratio.toFixed(1)}:1</span>` : '';
+  const oddsTxt = f => f ? ` <span class="odds">needs ${fmtPct(f.need * 100)}</span>` : '';
+  // Pure-bluff break-even: how often everyone must fold for a bet/raise with zero equity to profit
+  const bluffBE = (name, risk, reward) => ({ name, risk, reward, be:risk / (risk + reward) });
+  const bluffTxt = b => ` <span class="bluff">bluff BE ${fmtPct(b.be * 100)}</span>`;
   const gather = () => { Object.values(st.players).forEach(p => { st.pot += p.committed; p.committed = 0; }); };
-  const push = (label, o = {}) => steps.push({ ...clone(st), decision:null, label, actor:o.actor || null, kind:o.kind || '', hdr:!!o.hdr });
+  const push = (label, o = {}) => steps.push({ ...clone(st), decision:null, bluff:o.bluff || null, label, actor:o.actor || null, kind:o.kind || '', hdr:!!o.hdr });
 
   const checkRunout = () => {
     if(st.runout) return;
@@ -632,16 +654,18 @@ function buildSteps(h){
         p.stack -= e.amt; p.committed += e.amt;
         if(e.allin || p.stack <= 0) p.allin = true;
         p.act = p.allin ? 'All-in' : 'Bet'; p.actCls = p.allin ? 'b-allin' : 'b-bet';
-        push(`${nm(e.name)} bets ${fmt(e.amt)} ${potTag(e.amt, potBefore)}${p.allin ? ' <span class="tag">ALL-IN</span>' : ''}`, { actor:e.name, kind:'bet' });
+        const bl = bluffBE(e.name, e.amt, potBefore);
+        push(`${nm(e.name)} bets ${fmt(e.amt)} ${potTag(e.amt, potBefore)}${bluffTxt(bl)}${p.allin ? ' <span class="tag">ALL-IN</span>' : ''}`, { actor:e.name, kind:'bet', bluff:bl });
         break;
       }
       case 'raise': {
         const potBefore = st.pot + live(), mc = maxC(), toCall = mc - p.committed;
         const add = e.to - p.committed;
+        const bl = bluffBE(e.name, add, potBefore);
         p.stack -= add; p.committed = e.to;
         if(e.allin || p.stack <= 0) p.allin = true;
         p.act = p.allin ? 'All-in' : 'Raise'; p.actCls = p.allin ? 'b-allin' : 'b-raise';
-        push(`${nm(e.name)} raises to ${fmt(e.to)} ${potTag(e.to - mc, potBefore + toCall)}${dec ? ' <span class="odds">vs ' + dec.ratio.toFixed(1) + ':1</span>' : ''}${p.allin ? ' <span class="tag">ALL-IN</span>' : ''}`, { actor:e.name, kind:'raise' });
+        push(`${nm(e.name)} raises to ${fmt(e.to)} ${potTag(e.to - mc, potBefore + toCall)}${bluffTxt(bl)}${p.allin ? ' <span class="tag">ALL-IN</span>' : ''}`, { actor:e.name, kind:'raise', bluff:bl });
         break;
       }
       case 'uncalled':
@@ -698,7 +722,7 @@ function cardHTML(c, cls = '', style = ''){
 function geom(){
   const wrap = $('#tableWrap'), narrow = window.innerWidth < 700;
   wrap.classList.toggle('narrow', narrow);
-  return narrow ? { rx:39, ry:41, betF:.56, btnF:.74 } : { rx:41.5, ry:39, betF:.56, btnF:.76 };
+  return narrow ? { rx:39, ry:41, betF:.56, btnF:.74 } : { rx:41.5, ry:39, betF:.6, btnF:.76 };
 }
 
 function render(){
@@ -921,18 +945,22 @@ function renderEqPanel(s){
 }
 
 function renderOdds(s){
-  const el = $('#potOdds'), d = s.decision;
-  if(!d){ el.classList.remove('show'); el.innerHTML = ''; return; }
+  renderOddsInto($('#potOdds'), s); renderOddsInto($('#potOddsOut'), s);
+}
+function renderOddsInto(el, s){
+  const d = s.decision, b = s.bluff;
+  if(!d && !b){ el.classList.remove('show'); el.innerHTML = ''; return; }
   el.classList.add('show');
-  let eqLine = '';
+  const bluffLine = b ? `<div class="po-bluff">${esc(b.name)} ${s.kind === 'raise' ? 'raise' : 'bet'} as a bluff needs <b>${fmtPct(b.be * 100)}</b> folds</div>` : '';
+  if(!d){ el.innerHTML = bluffLine; return; }
+  let eqTxt = '';
   if(EQ.res && EQ.res.idx[d.name] != null){
     const eq = EQ.res.eq[0][EQ.res.idx[d.name]];
     const good = eq >= d.need, exact = EQ.ctx && !EQ.ctx.unknown;
     const ev = eq * (d.pot + d.toCall) - d.toCall;
-    eqLine = `<div class="po-eq ${good ? 'good' : 'bad'}">Equity <b>${fmtPct(eq * 100)}</b> · ${exact ? 'call EV ≈ <b>' + (ev >= 0 ? '+' : '−') + fmt(Math.abs(Math.round(ev))) + '</b>' : '<b>' + (good ? 'call +EV' : 'call −EV') + '</b> vs known hands'}</div>`;
+    eqTxt = ` · has <b class="${good ? 'good' : 'bad'}">${fmtPct(eq * 100)}</b> <span class="${good ? 'good' : 'bad'}">(${exact ? 'EV ' + (ev >= 0 ? '+' : '−') + fmt(Math.abs(Math.round(ev))) : (good ? '+EV' : '−EV') + ' vs known'})</span>`;
   }
-  el.innerHTML = `<div class="po-who">${esc(d.name)} to call <b>${fmt(d.toCall)}</b></div>
-    <div class="po-main"><span>Odds <b>${d.ratio.toFixed(1)}:1</b></span><span>Needs <b>${fmtPct(d.need * 100)}</b></span></div>${eqLine}`;
+  el.innerHTML = `${bluffLine}<div class="po-who">${esc(d.name)} to call <b>${fmt(d.toCall)}</b> · needs <b class="need">${fmtPct(d.need * 100)}</b>${eqTxt}</div>`;
 }
 
 /* ================= PLAYBACK ================= */
@@ -1016,13 +1044,29 @@ const LINK_DICT = new TextEncoder().encode(" (didn't bet) collected (folded on t
 const hasPako = () => typeof pako !== 'undefined' && pako.deflateRaw;
 const packC = text => b64enc(pako.deflateRaw(new TextEncoder().encode(text), { level:9, memLevel:9, dictionary:LINK_DICT }));
 const unpackC = code => new TextDecoder().decode(pako.inflateRaw(b64dec(code), { dictionary:LINK_DICT }));
+const shortApi = () => SHORT_API.trim().replace(/\/+$/, '');
+function withTimeout(promise, ms){ return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]); }
+async function makeShortId(text){
+  const res = await withTimeout(fetch(shortApi() + '/', { method:'POST', headers:{ 'Content-Type':'text/plain' }, body:text }), 8000);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const { id } = await res.json();
+  if(!/^[0-9A-Za-z]{8}$/.test(id || '')) throw new Error('bad id');
+  return id;
+}
+let shortFailed = false;
 async function makeShareName(h){
-  if(!shareCache[h.raw]) shareCache[h.raw] = hasPako() ? 'c' + packC(h.raw) : 'b-' + await packB64(h.raw);
+  if(shareCache[h.raw] && !(shortApi() && !shareCache[h.raw].startsWith('s-') && !shortFailed)) return shareCache[h.raw];
+  shortFailed = false;
+  if(shortApi()){
+    try{ shareCache[h.raw] = 's-' + await makeShortId(h.raw); return shareCache[h.raw]; }
+    catch(e){ shortFailed = true; }
+  }
+  shareCache[h.raw] = hasPako() ? 'c' + packC(h.raw) : 'b-' + await packB64(h.raw);
   return shareCache[h.raw];
 }
 let shareName = '';
 function shareLink(){
-  const sep = /^(b-|c)/.test(shareName) ? '~s' : '-s';
+  const sep = /^(b-|c|s-)/.test(shareName) ? '~s' : '-s';
   const step = $('#shareStep').checked && cur > 0 ? sep + (cur + 1) : '';
   return BASE_URL + '#' + shareName + step;
 }
@@ -1043,7 +1087,7 @@ $('#btnShare').onclick = async () => {
   $('#shareUrl').value = 'Creating link…';
   shareName = await makeShareName(H);
   refreshShare();
-  $('#shareOk').textContent = `Link created (${shareLink().length} characters) – the whole hand is packed into the link, so anyone can open it.`;
+  $('#shareOk').textContent = shareName.startsWith('s-') ? `Short link created (${shareLink().length} characters).` : shortFailed ? `Short-link service didn't answer, so this is a long link (${shareLink().length} characters) – it works just the same.` : `Link created (${shareLink().length} characters) – the whole hand is packed into the link, so anyone can open it.`;
 };
 $('#shareStep').onchange = refreshShare;
 let toastT;
@@ -1071,6 +1115,25 @@ $('#shareModal').onclick = e => { if(e.target.id === 'shareModal') $('#shareModa
 
 async function openFromHash(){
   const raw = location.hash.replace(/^#/, '');
+  const ms = raw.match(/^s-([0-9A-Za-z]{8})(?:~s(\d+))?$/);
+  if(ms){
+    $('#loading').classList.add('open');
+    try{
+      if(!shortApi()) throw new Error('This replayer has no short-link service set up.');
+      const res = await withTimeout(fetch(shortApi() + '/' + ms[1]), 10000);
+      if(res.status === 404) throw new Error('Shared hand not found.');
+      if(!res.ok) throw new Error('Could not load the shared hand.');
+      ingest(await res.text()); shareCache[H.raw] = 's-' + ms[1];
+      if(ms[2]) go(+ms[2] - 1);
+      $('#loading').classList.remove('open');
+      return true;
+    }catch(e){
+      $('.spin').style.display = 'none';
+      $('#loadingTxt').textContent = e.message === 'timeout' ? 'Loading the shared hand timed out.' : e.message;
+      setTimeout(() => { $('#loading').classList.remove('open'); $('.spin').style.display = ''; $('#loadingTxt').textContent = 'Loading shared hand…'; }, 3500);
+      return false;
+    }
+  }
   const mb = raw.match(/^(b-|c)([A-Za-z0-9_-]+?)(?:~s(\d+))?$/);
   if(mb){
     try{ ingest(mb[1] === 'c' ? unpackC(mb[2]) : await unpackB64(mb[2])); shareCache[H.raw] = mb[1] + mb[2]; if(mb[3]) go(+mb[3] - 1); return true; }
